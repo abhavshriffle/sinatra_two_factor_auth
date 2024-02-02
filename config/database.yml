@@ -1,0 +1,27 @@
+# PostgreSQL configuration for all environments
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: activedev
+  username: postgres
+  password: password
+  host: localhost
+
+test:
+  <<: *default
+  database: activetest
+  username: postgres
+  password: password
+  host: localhost
+
+production:
+  <<: *default
+  database: activedev_production
+  username: postgres
+  password: password
+  host: localhost
