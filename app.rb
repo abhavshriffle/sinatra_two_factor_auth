@@ -14,6 +14,7 @@ require 'rotp'
 require 'rubocop'
 require_relative 'app/mailers/user_mailer'
 require_relative 'app/models/user'
+require_relative './helpers'
 
 configure do
   set :database_file, 'config/database.yml'
@@ -41,14 +42,21 @@ post '/register' do
   content_type :json
 
   begin
+    request_body = JSON.parse(request.body.read)
+
     user = User.create(
-      username: params[:username],
-      email: params[:email],
-      password_digest: params[:password_digest]
+      username: request_body['username'],
+      email: request_body['email'],
+      password: request_body['password']
     )
+
     UserMailer.welcome_email(user)
+
     { message: 'Registration successful', user_id: user.id, user_username: user.username,
       user_email: user.email }.to_json
+  rescue JSON::ParserError
+    status 400
+    { error: 'Invalid JSON format in the request body' }.to_json
   rescue ActiveRecord::RecordInvalid => e
     status 400
     { error: "Registration failed: #{e.message}" }.to_json
@@ -59,7 +67,7 @@ post '/login' do
   content_type :json
 
   user = User.find_by(email: params[:email])
-  if user && BCrypt::Password.create(user.password_digest) == params[:password_digest]
+  if user && BCrypt::Password.create(user.password) == params[:password]
     user.update(authentication: true)
     { message: 'Login successful' }.to_json
   else
@@ -77,7 +85,7 @@ post '/enable_2fa' do
     if params[:two_factor_auth]
       user.update(two_factor_auth: true)
       UserMailer.generate_otp_email(user)
-      secret_key = ROTP::Base32.random_base32
+      secret_key = generate_secret_key(settings.environment.to_s)
       { message: 'Two-factor authentication enabled successfully', secret_key:,
         two_factor_auth: 'true' }.to_json
     else
@@ -113,6 +121,7 @@ delete '/logout' do
   content_type :json
 
   user = User.find_by(email: params[:email])
+
   if user.nil?
     status 401
     { error: 'User not found' }.to_json
@@ -128,13 +137,15 @@ post '/update_password' do
   content_type :json
 
   user = User.find_by(email: params[:email])
-  if user.present?
-    user.update(password_digest: params[:new_password_digest])
-    { message: 'Password updated successfully' }.to_json
-  else
+
+  unless user
     status 401
-    { error: 'Invalid current password' }.to_json
+    return { error: 'Invalid current password' }.to_json
   end
+
+  user.update(password: params[:new_password])
+
+  { message: 'Password updated successfully' }.to_json
 end
 
 post '/disable_2fa' do

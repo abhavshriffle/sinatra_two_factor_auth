@@ -13,12 +13,12 @@ gem 'bcrypt'
 gem 'rake'
 gem 'rack-flash3'
 gem 'require_all'
-gem 'actionmailer'
-gem 'mail'
+gem 'actionmailer', '~> 7.1.3'
+gem 'mail', '~> 2.7'
 gem 'securerandom'
 gem 'rotp'
 gem 'rubocop'
-gem 'bcrypt'
+gem 'bcrypt', '>= 0'
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 # gem "sprockets-rails"

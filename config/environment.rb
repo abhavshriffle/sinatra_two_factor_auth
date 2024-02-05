@@ -1,12 +1,12 @@
-ENV['SINATRA_ENV'] ||= "development"
+ENV['SINATRA_ENV'] ||= 'development'
 
 require 'bundler/setup'
 require 'action_mailer'
 Bundler.require(:default, ENV['SINATRA_ENV'])
 
 ActiveRecord::Base.establish_connection(
-  :adapter => "postgresql",
-  :database => "db/#{ENV['SINATRA_ENV']}.pg"
+  adapter: 'postgresql',
+  database: "db/#{ENV['SINATRA_ENV']}.pg"
 )
 
 ActionMailer::Base.delivery_method = :smtp
