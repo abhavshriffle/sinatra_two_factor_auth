@@ -45,9 +45,9 @@ post '/register' do
     request_body = JSON.parse(request.body.read)
 
     user = User.create(
-      username: request_body['username'],
-      email: request_body['email'],
-      password: request_body['password']
+      username: params['username'],
+      email: params['email'],
+      password: params['password']
     )
 
     UserMailer.welcome_email(user)
